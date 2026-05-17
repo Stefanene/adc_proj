@@ -1,1 +1,18 @@
-# adc_proj
+# ADC Project
+
+> [!NOTE]  
+> This project was conducted as part of Stanford Unviersity's CS231N Deep Learning for Computer Vision course.
+
+## How to Use
+
+Setup using these commands:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+Usage:
+
+
+## Structure
