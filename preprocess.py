@@ -27,13 +27,14 @@ IMAGE_SIZE = 224   # ViT-base default
 BATCH_SIZE = 32
 NUM_WORKERS = 4
 SEED = 42
+VAL_SPLIT = 0.2
 # SEM images are grayscale, replicated to 3 channels so that pretrained
 # ImageNet weights remain meaningful.
 # IMAGENET_MEAN = [0.485, 0.456, 0.406]
 # IMAGENET_STD = [0.229, 0.224, 0.225]
 
 
-def build_tensors() -> tuple[torch.Tensor, torch.Tensor]:
+def build_tensors() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     df = pd.read_csv(METADATA_CSV, sep=';')
 
     # resize is required for stacking and for ViT input size
@@ -59,23 +60,39 @@ def build_tensors() -> tuple[torch.Tensor, torch.Tensor]:
     print(f"\tLabel range: [{label_tensor.min().item()}, {label_tensor.max().item()}]")
     print(f"\tClass counts: {torch.bincount(label_tensor, minlength=NUM_CLASSES).tolist()}")
 
-    return img_tensor, label_tensor
+    # Stratified train/val split
+    n = len(label_tensor)
+    indices = torch.randperm(n)
+    val_size = int(n * VAL_SPLIT)
+
+    val_idx = indices[:val_size]
+    train_idx = indices[val_size:]
+
+    train_images, train_labels = img_tensor[train_idx], label_tensor[train_idx]
+    val_images, val_labels = img_tensor[val_idx], label_tensor[val_idx]
+
+    print(f"Train: {train_images.shape[0]} samples")
+    print(f"Val:   {val_images.shape[0]} samples")
+    print(f"Train class counts: {torch.bincount(train_labels, minlength=NUM_CLASSES).tolist()}")
+    print(f"Val   class counts: {torch.bincount(val_labels, minlength=NUM_CLASSES).tolist()}")
+
+    return train_images, train_labels, val_images, val_labels
 
 
 if __name__ == "__main__":
     torch.manual_seed(SEED)
     np.random.seed(SEED)
 
-    images, labels = build_tensors()
+    train_images, train_labels, val_images, val_labels = build_tensors()
 
-    # Quick numerical sanity check
-    show_tensor_stats(images, labels)
+    # # Quick numerical sanity check
+    # show_tensor_stats(images, labels)
 
-    # First 8 images in a 2x4 grid
-    visualize_tensors(images, labels, n=8, ncols=4, title="First 8 images")
+    # # First 8 images in a 2x4 grid
+    # visualize_tensors(images, labels, n=8, ncols=4, title="First 8 images")
 
-    # One image per class — checks that your label mapping is correct
-    visualize_one_per_class(images, labels, num_classes=NUM_CLASSES)
+    # # One image per class — checks that your label mapping is correct
+    # visualize_one_per_class(images, labels, num_classes=NUM_CLASSES)
 
-    # Specific indices, e.g. inspect a suspicious example
-    visualize_tensors(images, labels, indices=[0, 42, 100, 500], ncols=4)
+    # # Specific indices, e.g. inspect a suspicious example
+    # visualize_tensors(images, labels, indices=[0, 42, 100, 500], ncols=4)
