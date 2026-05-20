@@ -44,10 +44,14 @@ AUG_MULTIPLIERS: dict[int, int] = {
 # IMAGENET_STD = [0.229, 0.224, 0.225]
 
 
+# ----------------------------------------------------------------------
+# Augument data
+# ----------------------------------------------------------------------
 def augment_per_label(images: torch.Tensor,
                       labels: torch.Tensor,
                       multipliers: dict[int, int] = AUG_MULTIPLIERS,
                     ) -> tuple[torch.Tensor, torch.Tensor]:
+    
     # types of augmentations
     aug = transforms.Compose([
         transforms.RandomHorizontalFlip(),
@@ -85,6 +89,9 @@ def augment_per_label(images: torch.Tensor,
     return images, labels
 
 
+# ----------------------------------------------------------------------
+# Build tensors for data
+# ----------------------------------------------------------------------
 def build_tensors() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     df = pd.read_csv(METADATA_CSV, sep=';')
 
@@ -111,10 +118,10 @@ def build_tensors() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Ten
     print(f"\tLabel range: [{label_tensor.min().item()}, {label_tensor.max().item()}]")
     print(f"\tClass counts: {torch.bincount(label_tensor, minlength=NUM_CLASSES).tolist()}")
 
-    # Augment minority classes before splitting
+    # augment minority classes before splitting
     img_tensor, label_tensor = augment_per_label(img_tensor, label_tensor)
 
-    # Train/val split
+    # train/val split
     n = len(label_tensor)
     indices = torch.randperm(n)
     val_size = int(n * VAL_SPLIT)
@@ -133,6 +140,9 @@ def build_tensors() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Ten
     return train_images, train_labels, val_images, val_labels
 
 
+# ----------------------------------------------------------------------
+# Sanity check
+# ----------------------------------------------------------------------
 if __name__ == "__main__":
     torch.manual_seed(SEED)
     np.random.seed(SEED)
@@ -143,7 +153,7 @@ if __name__ == "__main__":
     # show_tensor_stats(train_images, train_labels)
 
     # # First 8 images in a 2x4 grid
-    visualize_tensors(train_images, train_labels, n=8, ncols=4, title="First 8 images")
+    # visualize_tensors(train_images, train_labels, n=8, ncols=4, title="First 8 images")
 
     # # One image per class — checks that your label mapping is correct
     # visualize_one_per_class(train_images, train_labels, num_classes=NUM_CLASSES)
