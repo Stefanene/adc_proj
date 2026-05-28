@@ -9,7 +9,8 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 
-from preprocess import build_tensors, NUM_CLASSES, BATCH_SIZE, NUM_WORKERS, SEED
+from datasplit import make_split
+from preprocess import build_tensors, NUM_CLASSES, BATCH_SIZE, NUM_WORKERS, SEED, AUG_MULTIPLIERS
 from model import vit_small
 
 
@@ -173,7 +174,8 @@ def main() -> None:
     np.random.seed(SEED)
 
     # ---- Data ----
-    train_images, train_labels, val_images, val_labels = build_tensors()
+    train_images, train_labels, val_images, val_labels, _ = make_split(AUG_MULTIPLIERS)
+    
 
     train_ds = TensorDataset(train_images, train_labels)
     val_ds = TensorDataset(val_images, val_labels)
